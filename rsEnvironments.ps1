@@ -26,7 +26,7 @@ configuration Assert_DSCService
       [string[]]$NodeName,
       [ValidateNotNullOrEmpty()]
       [string] $certificateThumbPrint
-      [string] $ConfigurationData
+
    )
     $secpasswd = ConvertTo-SecureString "admin$/doubledutch$/2" -AsPlainText -Force
     $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
