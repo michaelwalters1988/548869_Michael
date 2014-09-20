@@ -11,6 +11,14 @@
 # Import RS Cloud and Github account information.
 ##################################################################################################################################
 . "C:\cloud-automation\secrets.ps1"
+    $ConfigurationData = @{
+    AllNodes = @(
+        @{
+            NodeName=$Nodes;
+            PSDscAllowPlainTextPassword=$true
+         }
+    )
+}
 
 
 ##################################################################################################################################
@@ -23,8 +31,11 @@ configuration Assert_DSCService
       [string[]]$NodeName,
       [ValidateNotNullOrEmpty()]
       [string] $certificateThumbPrint
+      [string] $ConfigurationData
    )
-   
+
+    $secpasswd = ConvertTo-SecureString "admin$/doubledutch$/2" -AsPlainText -Force
+    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
    
    ##################################################################################################################################
    # Import Required Modules
@@ -42,6 +53,16 @@ configuration Assert_DSCService
    
    Node $NodeName
    {
+       User adminUser
+        {
+            UserName = "prodwebadmin"
+            Description = "This account is created using DSC"
+            Password = $mycreds
+            FullName = "prodwebadmin"
+            PasswordNeverExpires = $true
+            PasswordChangeRequired = $true
+            Ensure = 'Present'
+        }
     
       ##################################################################################################################################
       # Install Required Windows Features (pull server)
@@ -141,7 +162,7 @@ configuration Assert_DSCService
         dataCenter = "DFW"
         role = "webFarm"
         pullServerName = "PULLServer"
-        environmentGuid = "UNIQUEGUID"
+        environmentGuid = "8e33f78781003bed6596ec22b86497521bfcd102"
         BuildTimeOut = 30
         EnvironmentName = "DFWwebfarm"
       }
@@ -364,5 +385,5 @@ if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Ge
    powershell.exe certutil -addstore -f root $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
 }
 chdir C:\Windows\Temp
-Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
+Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint -ConfigurationData $ConfigurationData
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
