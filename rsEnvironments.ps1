@@ -14,7 +14,7 @@
     $ConfigurationData = @{
     AllNodes = @(
         @{
-            NodeName=$Nodes;
+            NodeName=$NodeName;
             PSDscAllowPlainTextPassword=$true
          }
     )
@@ -50,6 +50,7 @@ configuration Assert_DSCService
    Import-DSCResource -ModuleName msWebAdministration
    Import-DSCResource -ModuleName PowerShellAccessControl
    Import-DSCResource -ModuleName msNetworking
+      Import-DSCResource -ModuleName 
    
    Node $NodeName
    {
@@ -59,7 +60,6 @@ configuration Assert_DSCService
             Description = "This account is created using DSC"
             Password = $mycreds
             FullName = "prodwebadmin"
-            PasswordNeverExpires = $true
             Ensure = 'Present'
         }
     
