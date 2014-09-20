@@ -13,14 +13,7 @@
 . "C:\cloud-automation\secrets.ps1"
 
 
-       $ConfigurationData = @{
-    AllNodes = @(
-        @{
-            $NodeName=$env:COMPUTERNAME;
-            PSDscAllowPlainTextPassword=$true
-         }
-    )
-}
+
 
 
 ##################################################################################################################################
@@ -363,6 +356,15 @@ configuration Assert_DSCService
 taskkill /F /IM WmiPrvSE.exe
 $NodeName = $env:COMPUTERNAME
 $cN = "CN=" + $NodeName
+
+       $ConfigurationData = @{
+    AllNodes = @(
+        @{
+            NodeName=$NodeName;
+            PSDscAllowPlainTextPassword=$true
+         }
+    )
+}
 Remove-Item -Path "C:\Windows\Temp\Assert_DSCService" -Force -Recurse -ErrorAction SilentlyContinue
 if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Get-ChildItem Cert:\LocalMachine\Root\ | where {$_.Subject -eq $cN})) {
    Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN} | Remove-Item
