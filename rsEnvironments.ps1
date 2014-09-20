@@ -60,7 +60,6 @@ configuration Assert_DSCService
             Password = $mycreds
             FullName = "prodwebadmin"
             PasswordNeverExpires = $true
-            PasswordChangeRequired = $true
             Ensure = 'Present'
         }
     
