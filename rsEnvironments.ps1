@@ -11,14 +11,7 @@
 # Import RS Cloud and Github account information.
 ##################################################################################################################################
 . "C:\cloud-automation\secrets.ps1"
-    $ConfigurationData = @{
-    AllNodes = @(
-        @{
-            NodeName=$NodeName;
-            PSDscAllowPlainTextPassword=$true
-         }
-    )
-}
+
 
 
 ##################################################################################################################################
@@ -33,6 +26,14 @@ configuration Assert_DSCService
       [string] $certificateThumbPrint
       [string] $ConfigurationData
    )
+       $ConfigurationData = @{
+    AllNodes = @(
+        @{
+            NodeName=$NodeName;
+            PSDscAllowPlainTextPassword=$true
+         }
+    )
+}
 
     $secpasswd = ConvertTo-SecureString "admin$/doubledutch$/2" -AsPlainText -Force
     $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
