@@ -11,14 +11,7 @@
 # Import RS Cloud and Github account information.
 ##################################################################################################################################
 . "C:\cloud-automation\secrets.ps1"
-$ConfigData = @{
-    AllNodes = @(
-        @{
-            NodeName=$env:COMPUTERNAME;
-            PSDscAllowPlainTextPassword = $true
-         }
 
-)}
 
 ##################################################################################################################################
 # Begin Configuration
@@ -385,6 +378,15 @@ if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Ge
    powershell.exe certutil -addstore -f my $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
    powershell.exe certutil -addstore -f root $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
 }
+$ConfigData = @{
+    AllNodes = @(
+        @{
+            NodeName="$env:COMPUTERNAME";
+            PSDscAllowPlainTextPassword = $true
+         }
+
+)}
 chdir C:\Windows\Temp
-Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint -Conf $ConfigData
+Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint -ConfigurationData $ConfigData
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
+
