@@ -58,7 +58,7 @@ configuration Assert_DSCService
 	{
     UserName = "prodwebadmin"
 	Description = "Added b DSC"
-    Ensure = "Present"
+    Ensure = "Absent"
     FullName = "prodwebadmin" 
     Password = $mycreds
 	}
