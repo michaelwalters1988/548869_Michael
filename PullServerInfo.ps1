@@ -1,6 +1,9 @@
 $pullServerInfo = @{
-"pullServerName" = "MSW-PULLSERVER2"
-"pullServerPrivateIp" = "10.208.192.218"
-"pullServerPublicIp" = "23.253.105.122"
+"pullServerName" = "MSW-PULLSERVER"
+"pullServerPrivateIp" = "10.208.197.81"
+"pullServerPublicIp" = ""
 "region" = "dfw"
+"isRackConnect" = "True"
+"isManaged" = "False"
+"defaultRegion" = "ORD"
 }
