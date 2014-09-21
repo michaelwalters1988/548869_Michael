@@ -11,9 +11,14 @@
 # Import RS Cloud and Github account information.
 ##################################################################################################################################
 . "C:\cloud-automation\secrets.ps1"
+$ConfigData = @{
+    AllNodes = @(
+        @{
+            NodeName=$env:COMPUTERNAME;
+            PSDscAllowPlainTextPassword = $true
+         }
 
-
-
+)}
 
 
 ##################################################################################################################################
@@ -21,9 +26,15 @@
 ##################################################################################################################################
 configuration Assert_DSCService
 {
-
-    $secpasswd = ConvertTo-SecureString "admin$/doubledutch$/2" -AsPlainText -Force
+    $secpasswd = ConvertTo-SecureString 'admin$doubledutch$2' -AsPlainText -Force
     $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
+   param
+   (
+      [string[]]$NodeName,
+      [ValidateNotNullOrEmpty()]
+      [string] $certificateThumbPrint
+   )
+   
    
    ##################################################################################################################################
    # Import Required Modules
@@ -38,19 +49,20 @@ configuration Assert_DSCService
    Import-DSCResource -ModuleName msWebAdministration
    Import-DSCResource -ModuleName PowerShellAccessControl
    Import-DSCResource -ModuleName msNetworking
-      Import-DSCResource -ModuleName 
    
    Node $NodeName
    {
-       User adminUser
-        {
-            UserName = "prodwebadmin"
-            Description = "This account is created using DSC"
-            Password = $mycreds
-            FullName = "prodwebadmin"
-            Ensure = 'Present'
-        }
-    
+
+
+    User addlocaladmin
+	{
+    UserName = "prodwebadmin"
+	Description = "Added by DSC"
+    Ensure = "Present"
+    FullName = "prodwebadmin" 
+    Password = $mycreds
+	}
+ 
       ##################################################################################################################################
       # Install Required Windows Features (pull server)
       ##################################################################################################################################
@@ -149,7 +161,7 @@ configuration Assert_DSCService
         dataCenter = "DFW"
         role = "webFarm"
         pullServerName = "PULLServer"
-        environmentGuid = "8e33f78781003bed6596ec22b86497521bfcd102"
+        environmentGuid = "UNIQUEGUID"
         BuildTimeOut = 30
         EnvironmentName = "DFWwebfarm"
       }
@@ -341,18 +353,15 @@ configuration Assert_DSCService
          Principal = "IIS AppPool\GitDeployHub"
          DependsOn = "[rsScheduledTask]VerifyTask"
       }
+   }
    
 }
- 
-   
-
 ##################################################################################################################################
 # Configuration end - lines below run the config and create/install cert used for client/pull HTTPS comms
 ##################################################################################################################################
 taskkill /F /IM WmiPrvSE.exe
 $NodeName = $env:COMPUTERNAME
 $cN = "CN=" + $NodeName
-
 Remove-Item -Path "C:\Windows\Temp\Assert_DSCService" -Force -Recurse -ErrorAction SilentlyContinue
 if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Get-ChildItem Cert:\LocalMachine\Root\ | where {$_.Subject -eq $cN})) {
    Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN} | Remove-Item
@@ -374,17 +383,8 @@ if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Ge
    powershell.exe certutil -addstore -f my $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
    powershell.exe certutil -addstore -f root $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
 }
-       $ConfigurationData = @{
-    AllNodes = @(
-        @{
-            NodeName=$NodeName;
-            CertificateFile = $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\') 
-            certificateThumbPrint = (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
-         }
-    )
-  }
 
 
 chdir C:\Windows\Temp
-Assert_DSCService -ConfigurationData $ConfigurationData
+Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
