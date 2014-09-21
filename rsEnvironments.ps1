@@ -29,7 +29,8 @@ configuration Assert_DSCService
    (
       [string[]]$NodeName,
       [ValidateNotNullOrEmpty()]
-      [string] $certificateThumbPrint
+      [string] $certificateThumbPrint,
+      [string] $ConfigData
    )
    
    
@@ -385,5 +386,5 @@ if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Ge
    powershell.exe certutil -addstore -f root $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
 }
 chdir C:\Windows\Temp
-Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
+Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint -Conf $ConfigData
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
