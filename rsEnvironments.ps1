@@ -20,14 +20,11 @@ $ConfigData = @{
 
 )}
 
-
 ##################################################################################################################################
 # Begin Configuration
 ##################################################################################################################################
 configuration Assert_DSCService
 {
-    $secpasswd = ConvertTo-SecureString 'admin$doubledutch$2' -AsPlainText -Force
-    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
    param
    (
       [string[]]$NodeName,
@@ -52,17 +49,7 @@ configuration Assert_DSCService
    
    Node $NodeName
    {
-
-
-    User addlocaladmin
-	{
-    UserName = "prodwebadmin"
-	Description = "Added b DSC"
-    Ensure = "Present"
-    FullName = "prodwebadmin" 
-    Password = $mycreds
-	}
- 
+    
       ##################################################################################################################################
       # Install Required Windows Features (pull server)
       ##################################################################################################################################
@@ -93,7 +80,7 @@ configuration Assert_DSCService
       {
          Ensure = "Present"
          EndpointName = "PSDSCPullServer"
-         Port = 8080
+         Port = 8081
          PhysicalPath = "$env:SystemDrive\inetpub\wwwroot\PSDSCPullServer"
          CertificateThumbPrint = $certificateThumbPrint
          ModulePath = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Modules"
@@ -146,7 +133,21 @@ configuration Assert_DSCService
       ##################################################################################################################################
       # Define server and loadbalancer environments (Orchestration Layer)
       ##################################################################################################################################
-      
+
+    $secpasswd = ConvertTo-SecureString 'admin$doubledutch$2' -AsPlainText -Force
+    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
+
+	User addlocaladmin
+	{
+    UserName = "prodwebadmin"
+	Description = "Added b DSC"
+    Ensure = "Present"
+    FullName = "prodwebadmin" 
+    Password = $mycreds
+	}
+       
+
+
       ### Environment section commented out for template, please edit this section for your own environment builds
       
 <#
@@ -383,8 +384,6 @@ if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Ge
    powershell.exe certutil -addstore -f my $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
    powershell.exe certutil -addstore -f root $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
 }
-
-
 chdir C:\Windows\Temp
 Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
