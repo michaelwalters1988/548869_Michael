@@ -57,7 +57,7 @@ configuration Assert_DSCService
     User addlocaladmin
 	{
     UserName = "prodwebadmin"
-	Description = "Added by DSC"
+	Description = "Added b DSC"
     Ensure = "Present"
     FullName = "prodwebadmin" 
     Password = $mycreds
