@@ -18,7 +18,14 @@
 ##################################################################################################################################
 configuration Assert_DSCService
 {
-  
+   param
+   (
+      [string[]]$NodeName,
+      [ValidateNotNullOrEmpty()]
+      [string] $certificateThumbPrint
+   )
+   
+   
    ##################################################################################################################################
    # Import Required Modules
    ##################################################################################################################################
@@ -32,7 +39,6 @@ configuration Assert_DSCService
    Import-DSCResource -ModuleName msWebAdministration
    Import-DSCResource -ModuleName PowerShellAccessControl
    Import-DSCResource -ModuleName msNetworking
-   Import-DscResource -ModuleName PSDesiredStateConfiguration
    
    Node $NodeName
    {
@@ -67,7 +73,7 @@ configuration Assert_DSCService
       {
          Ensure = "Present"
          EndpointName = "PSDSCPullServer"
-         Port = 8081
+         Port = 8080
          PhysicalPath = "$env:SystemDrive\inetpub\wwwroot\PSDSCPullServer"
          CertificateThumbPrint = $certificateThumbPrint
          ModulePath = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Modules"
@@ -120,13 +126,26 @@ configuration Assert_DSCService
       ##################################################################################################################################
       # Define server and loadbalancer environments (Orchestration Layer)
       ##################################################################################################################################
-
-       
-
-
+      
       ### Environment section commented out for template, please edit this section for your own environment builds
       
+      rsCloudServersOpenStack DFWwebfarm
+      {
+        Ensure = "Present"
+        minNumberOfDevices = 2
+        maxNumberOfDevices = 9
+        namingConvention = "Farm"
+        image = "Windows Server 2012"
+        nflavor = "performance1-4"
+        dataCenter = "DFW"
+        role = "webFarm"
+        pullServerName = "MSW_pull"
+        environmentGuid = "7925d146-aabc-44b0-8c29-41e034994696"
+        BuildTimeOut = 30
+        EnvironmentName = "DFWwebfarm"
+      }
 
+<#
       rsCloudServersOpenStack DFWwebfarm
       {
         Ensure = "Present"
@@ -137,12 +156,12 @@ configuration Assert_DSCService
         nflavor = "performance1-4"
         dataCenter = "DFW"
         role = "webFarm"
-        pullServerName = "MSW_PULL"
-        environmentGuid = "7925d146-aabc-44b0-8c29-41e034994696"
+        pullServerName = "PULLServer"
+        environmentGuid = "UNIQUEGUID"
         BuildTimeOut = 30
         EnvironmentName = "DFWwebfarm"
       }
-<#
+
 
       rsCloudServersOpenStack DFWDevfarm
       {
@@ -333,7 +352,6 @@ configuration Assert_DSCService
    }
    
 }
-
 ##################################################################################################################################
 # Configuration end - lines below run the config and create/install cert used for client/pull HTTPS comms
 ##################################################################################################################################
