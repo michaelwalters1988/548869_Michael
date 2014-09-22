@@ -58,14 +58,6 @@ configuration Assert_DSCService
          Name = "DSC-Service"
       }
       
-      User addlocaladmin
-	  {
-        UserName = "prodwebadmin"
-	    Description = "Added b DSC"
-        Ensure = "Present"
-        FullName = "prodwebadmin" 
-        Password = $mycreds
-	  }
       
       ##################################################################################################################################
       # Install DSC Webservices
@@ -346,6 +338,8 @@ configuration Assert_DSCService
 # Configuration end - lines below run the config and create/install cert used for client/pull HTTPS comms
 ##################################################################################################################################
 taskkill /F /IM WmiPrvSE.exe
+$NodeName = $env:COMPUTERNAME
+$cN = "CN=" + $NodeName
 Remove-Item -Path "C:\Windows\Temp\Assert_DSCService" -Force -Recurse -ErrorAction SilentlyContinue
 if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Get-ChildItem Cert:\LocalMachine\Root\ | where {$_.Subject -eq $cN})) {
    Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN} | Remove-Item
@@ -367,17 +361,6 @@ if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Ge
    powershell.exe certutil -addstore -f my $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
    powershell.exe certutil -addstore -f root $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
 }
-$ConfigData = @{
-    AllNodes = @(
-        @{
-            NodeName="$env:COMPUTERNAME";
-            PSDscAllowPlainTextPassword = $true
-            $NodeName = $env:COMPUTERNAME
-            $cN = "CN=" + $NodeName
-         }
-
-)}
 chdir C:\Windows\Temp
-Assert_DSCService -ConfigurationData $ConfigData
+Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
-
