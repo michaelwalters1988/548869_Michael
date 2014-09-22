@@ -18,15 +18,7 @@
 ##################################################################################################################################
 configuration Assert_DSCService
 {
-   param
-   (
-      [string[]]$NodeName,
-      [ValidateNotNullOrEmpty()]
-      [string] $certificateThumbPrint,
-      [string] $ConfigData
-   )
-   
-   
+  
    ##################################################################################################################################
    # Import Required Modules
    ##################################################################################################################################
@@ -128,17 +120,6 @@ configuration Assert_DSCService
       # Define server and loadbalancer environments (Orchestration Layer)
       ##################################################################################################################################
 
-    $secpasswd = ConvertTo-SecureString 'admin$doubledutch$2' -AsPlainText -Force
-    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
-
-	User addlocaladmin
-	{
-    UserName = "prodwebadmin"
-	Description = "Added b DSC"
-    Ensure = "Present"
-    FullName = "prodwebadmin" 
-    Password = $mycreds
-	}
        
 
 
@@ -355,8 +336,6 @@ configuration Assert_DSCService
 # Configuration end - lines below run the config and create/install cert used for client/pull HTTPS comms
 ##################################################################################################################################
 taskkill /F /IM WmiPrvSE.exe
-$NodeName = $env:COMPUTERNAME
-$cN = "CN=" + $NodeName
 Remove-Item -Path "C:\Windows\Temp\Assert_DSCService" -Force -Recurse -ErrorAction SilentlyContinue
 if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Get-ChildItem Cert:\LocalMachine\Root\ | where {$_.Subject -eq $cN})) {
    Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN} | Remove-Item
@@ -383,10 +362,12 @@ $ConfigData = @{
         @{
             NodeName="$env:COMPUTERNAME";
             PSDscAllowPlainTextPassword = $true
+            $NodeName = $env:COMPUTERNAME
+            $cN = "CN=" + $NodeName
          }
 
 )}
 chdir C:\Windows\Temp
-Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint -ConfigurationData $ConfigData
+Assert_DSCService -ConfigurationData $ConfigData
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
 
