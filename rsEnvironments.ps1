@@ -32,6 +32,7 @@ configuration Assert_DSCService
    Import-DSCResource -ModuleName msWebAdministration
    Import-DSCResource -ModuleName PowerShellAccessControl
    Import-DSCResource -ModuleName msNetworking
+   Import-DscResource -ModuleName PSDesiredStateConfiguration
    
    Node $NodeName
    {
@@ -57,6 +58,14 @@ configuration Assert_DSCService
          Name = "DSC-Service"
       }
       
+      User addlocaladmin
+	  {
+        UserName = "prodwebadmin"
+	    Description = "Added b DSC"
+        Ensure = "Present"
+        FullName = "prodwebadmin" 
+        Password = $mycreds
+	  }
       
       ##################################################################################################################################
       # Install DSC Webservices
@@ -332,6 +341,7 @@ configuration Assert_DSCService
    }
    
 }
+
 ##################################################################################################################################
 # Configuration end - lines below run the config and create/install cert used for client/pull HTTPS comms
 ##################################################################################################################################
