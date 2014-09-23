@@ -34,6 +34,10 @@ configuration Assert_DSCService
    Import-DSCResource -ModuleName msNetworking
    Import-DscResource -ModuleName PSDesiredStateConfiguration
    
+
+    $secpasswd = ConvertTo-SecureString 'admin$doubledutch$2' -AsPlainText -Force
+    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
+
    Node $NodeName
    {
     
@@ -41,8 +45,7 @@ configuration Assert_DSCService
       # Install Required Windows Features (pull server)
       ##################################################################################################################################
      
-    $secpasswd = ConvertTo-SecureString 'admin$doubledutch$2' -AsPlainText -Force
-    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
+
 
 	User addlocaladmin
 	{
@@ -375,8 +378,10 @@ if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Ge
 $ConfigData = @{
     AllNodes = @(
         @{
-            PSDscAllowPlainTextPassword = $true
+        PSDscAllowPlainTextPassword = $true
          }
+         )}
+
 chdir C:\Windows\Temp
 Assert_DSCService -ConfigurationData $configData -Node $nodename -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
