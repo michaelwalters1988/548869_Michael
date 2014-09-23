@@ -18,7 +18,14 @@
 ##################################################################################################################################
 configuration Assert_DSCService
 {
-  
+   param
+   (
+      [string[]]$NodeName,
+      [ValidateNotNullOrEmpty()]
+      [string] $certificateThumbPrint
+   )
+   
+   
    ##################################################################################################################################
    # Import Required Modules
    ##################################################################################################################################
@@ -32,34 +39,13 @@ configuration Assert_DSCService
    Import-DSCResource -ModuleName msWebAdministration
    Import-DSCResource -ModuleName PowerShellAccessControl
    Import-DSCResource -ModuleName msNetworking
-   Import-DscResource -ModuleName PSDesiredStateConfiguration
    
-
-    $secpasswd = ConvertTo-SecureString 'admin$doubledutch$2' -AsPlainText -Force
-    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
-
    Node $NodeName
    {
     
       ##################################################################################################################################
       # Install Required Windows Features (pull server)
       ##################################################################################################################################
-     
-
-
-	User addlocaladmin
-	{
-    UserName = "prodwebadmin"
-	Description = "Added b DSC"
-    Ensure = "Present"
-    FullName = "prodwebadmin" 
-    Password = $mycreds
-	}
-
-
-
-     
-     
       WindowsFeature IIS
       {
          Ensure = "Present"
@@ -78,14 +64,6 @@ configuration Assert_DSCService
          Name = "DSC-Service"
       }
       
-      User addlocaladmin
-	  {
-        UserName = "prodwebadmin"
-	    Description = "Added b DSC"
-        Ensure = "Present"
-        FullName = "prodwebadmin" 
-        Password = $mycreds
-	  }
       
       ##################################################################################################################################
       # Install DSC Webservices
@@ -95,7 +73,7 @@ configuration Assert_DSCService
       {
          Ensure = "Present"
          EndpointName = "PSDSCPullServer"
-         Port = 8081
+         Port = 8080
          PhysicalPath = "$env:SystemDrive\inetpub\wwwroot\PSDSCPullServer"
          CertificateThumbPrint = $certificateThumbPrint
          ModulePath = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Modules"
@@ -148,10 +126,7 @@ configuration Assert_DSCService
       ##################################################################################################################################
       # Define server and loadbalancer environments (Orchestration Layer)
       ##################################################################################################################################
-
-       
-
-
+      
       ### Environment section commented out for template, please edit this section for your own environment builds
       
 <#
@@ -361,27 +336,33 @@ configuration Assert_DSCService
    }
    
 }
-
 ##################################################################################################################################
 # Configuration end - lines below run the config and create/install cert used for client/pull HTTPS comms
 ##################################################################################################################################
-$nodename = $Env:COMPUTERNAME
 taskkill /F /IM WmiPrvSE.exe
-$cN = "CN=" + $nodename
+$NodeName = $env:COMPUTERNAME
+$cN = "CN=" + $NodeName
 Remove-Item -Path "C:\Windows\Temp\Assert_DSCService" -Force -Recurse -ErrorAction SilentlyContinue
 if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Get-ChildItem Cert:\LocalMachine\Root\ | where {$_.Subject -eq $cN})) {
    Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN} | Remove-Item
    Get-ChildItem Cert:\LocalMachine\Root\ | where {$_.Subject -eq $cN} | Remove-Item
-   powershell.exe $($d.wD, $d.prov, "makecert.exe" -join '\') -r -pe -n $cN, -ss my "C:\inetpub\wwwroot\PullServer.cert.pfx", -sr localmachine
-   powershell.exe certutil -addstore -f Root, "C:\inetpub\wwwroot\PullServer.cert.pfx"
+   if(!(Test-Path -Path $($d.wD, $d.mR, "Certificates" -join '\'))) {
+      New-Item -Path $($d.wD, $d.mR, "Certificates" -join '\') -ItemType directory
+   }
+   if($($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')) {
+      Remove-Item -Path $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\') -Force
+   }
+   powershell.exe $($d.wD, $d.prov, "makecert.exe" -join '\') -r -pe -n $cN, -ss my $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\'), -sr localmachine, -len 2048
+   chdir $($d.wD, $d.mR -join '\')
+   Start-Service Browser
+   Start -Wait "C:\Program Files (x86)\Git\bin\git.exe" -ArgumentList "add $($d.wD, $d.mR, "Certificates/PullServer.cert.pfx" -join '\')"
+   Start -Wait "C:\Program Files (x86)\Git\bin\git.exe" -ArgumentList "commit -a -m `"pushing PullServer.cert.pfx`""
+   Start -Wait "C:\Program Files (x86)\Git\bin\git.exe" -ArgumentList "pull origin $($d.br)"
+   Start -Wait "C:\Program Files (x86)\Git\bin\git.exe" -ArgumentList "push origin $($d.br)"
+   Stop-Service Browser
+   powershell.exe certutil -addstore -f my $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
+   powershell.exe certutil -addstore -f root $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
 }
-$ConfigData = @{
-    AllNodes = @(
-        @{
-        PSDscAllowPlainTextPassword = $true
-         }
-         )}
-
 chdir C:\Windows\Temp
-Assert_DSCService -ConfigurationData $configData -Node $nodename -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
+Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
