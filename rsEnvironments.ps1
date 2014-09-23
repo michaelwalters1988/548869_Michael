@@ -54,6 +54,7 @@ configuration Assert_DSCService
 	}
 
 
+
      
      
       WindowsFeature IIS
@@ -361,38 +362,21 @@ configuration Assert_DSCService
 ##################################################################################################################################
 # Configuration end - lines below run the config and create/install cert used for client/pull HTTPS comms
 ##################################################################################################################################
+$nodename = $Env:COMPUTERNAME
 taskkill /F /IM WmiPrvSE.exe
+$cN = "CN=" + $nodename
 Remove-Item -Path "C:\Windows\Temp\Assert_DSCService" -Force -Recurse -ErrorAction SilentlyContinue
 if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Get-ChildItem Cert:\LocalMachine\Root\ | where {$_.Subject -eq $cN})) {
    Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN} | Remove-Item
    Get-ChildItem Cert:\LocalMachine\Root\ | where {$_.Subject -eq $cN} | Remove-Item
-   if(!(Test-Path -Path $($d.wD, $d.mR, "Certificates" -join '\'))) {
-      New-Item -Path $($d.wD, $d.mR, "Certificates" -join '\') -ItemType directory
-   }
-   if($($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')) {
-      Remove-Item -Path $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\') -Force
-   }
-   powershell.exe $($d.wD, $d.prov, "makecert.exe" -join '\') -r -pe -n $cN, -ss my $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\'), -sr localmachine, -len 2048
-   chdir $($d.wD, $d.mR -join '\')
-   Start-Service Browser
-   Start -Wait "C:\Program Files (x86)\Git\bin\git.exe" -ArgumentList "add $($d.wD, $d.mR, "Certificates/PullServer.cert.pfx" -join '\')"
-   Start -Wait "C:\Program Files (x86)\Git\bin\git.exe" -ArgumentList "commit -a -m `"pushing PullServer.cert.pfx`""
-   Start -Wait "C:\Program Files (x86)\Git\bin\git.exe" -ArgumentList "pull origin $($d.br)"
-   Start -Wait "C:\Program Files (x86)\Git\bin\git.exe" -ArgumentList "push origin $($d.br)"
-   Stop-Service Browser
-   powershell.exe certutil -addstore -f my $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
-   powershell.exe certutil -addstore -f root $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
+   powershell.exe $($d.wD, $d.prov, "makecert.exe" -join '\') -r -pe -n $cN, -ss my "C:\inetpub\wwwroot\PullServer.cert.pfx", -sr localmachine
+   powershell.exe certutil -addstore -f Root, "C:\inetpub\wwwroot\PullServer.cert.pfx"
 }
-
-$ConfigData = PSDscAllowPlainTextPassword = $true
 $ConfigData = @{
     AllNodes = @(
         @{
             PSDscAllowPlainTextPassword = $true
          }
-
-)}
 chdir C:\Windows\Temp
-Assert_DSCService -ConfigurationData $ConfigData
-Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force 
-
+Assert_DSCService -ConfigurationData $configData -Node $nodename -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
+Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
