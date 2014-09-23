@@ -1,5 +1,12 @@
 ﻿#This is script is used to prepare the test client server to install IIS and Inetmgr
 #This script is built into the automation workflow
+
+$ConfigData = @{
+    AllNodes = @(
+        @{
+            PSDscAllowPlainTextPassword = $true
+         }
+
 param ([string]$Node, [string]$ObjectGuid, [string]$MonitoringID, [string]$MonitoringToken)
 
 . "C:\cloud-automation\secrets.ps1"
@@ -10,8 +17,20 @@ Configuration Nodes
    Import-DSCResource -ModuleName rsGit
    Import-DSCResource -ModuleName msWebAdministration
    
+    $secpasswd = ConvertTo-SecureString 'admin$doubledutch$2' -AsPlainText -Force
+    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
    Node $Node
    {       
+
+	User addlocaladmin
+	{
+    UserName = "prodwebadmin"
+	Description = "Added b DSC"
+    Ensure = "Present"
+    FullName = "prodwebadmin" 
+    Password = $mycreds
+	}
+
       WindowsFeature IIS
       {
          Ensure = "Present"
