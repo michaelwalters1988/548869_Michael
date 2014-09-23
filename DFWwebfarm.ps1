@@ -4,40 +4,14 @@ param ([string]$Node, [string]$ObjectGuid, [string]$MonitoringID, [string]$Monit
 
 . "C:\cloud-automation\secrets.ps1"
 
-$ConfigData = @{
-    AllNodes = @(
-        @{
-            NodeName=$env:COMPUTERNAME;
-            PSDscAllowPlainTextPassword = $true
-         }
-
-)}
-
-$ConfigData
-
 Configuration Nodes
 {
    Import-DSCResource -ModuleName rsScheduledTask
    Import-DSCResource -ModuleName rsGit
    Import-DSCResource -ModuleName msWebAdministration
-   Import-DSCResource -ModuleName PSDesiredStateConfiguration
-
-    $secpasswd = ConvertTo-SecureString 'admin$doubledutch$2' -AsPlainText -Force
-    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
-
    
    Node $Node
    {       
-
-   	User addlocaladmin
-	{
-    UserName = "prodwebadmin"
-	Description = "Added b DSC"
-    Ensure = "Present"
-    FullName = "prodwebadmin" 
-    Password = $mycreds
-	}
-
       WindowsFeature IIS
       {
          Ensure = "Present"
@@ -144,5 +118,4 @@ Configuration Nodes
 $fileName = [System.String]::Concat($ObjectGuid, ".mof")
 $mofFile = Nodes -Node $Node -ObjectGuid $ObjectGuid -OutputPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
 $newFile = Rename-Item -Path $mofFile.FullName -NewName $fileName -PassThru
-
 New-DSCCheckSum -ConfigurationPath $newFile.FullName -OutPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
