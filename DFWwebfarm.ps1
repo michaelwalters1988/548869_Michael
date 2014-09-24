@@ -122,28 +122,12 @@ Configuration Nodes
          Interval = "5"
       }
 
-              User adminUser
-        {
-            UserName = "Steve.J"
-            Description = "This account is created using DSC"
-            Password = $mycreds
-            FullName = "Steve Jobs"
-            PasswordNeverExpires = $true
 
-            Ensure = 'Present'
-   }
 }
 
-$ConfigData = @{
-    AllNodes = @(
-        @{
-            NodeName="$Node";
-            PSDscAllowPlainTextPassword = $true
-         }
 
-)}
 
 $fileName = [System.String]::Concat($ObjectGuid, ".mof")
-$mofFile = Nodes -Configurationdata $ConfigData -Node $Node -ObjectGuid $ObjectGuid -OutputPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
+$mofFile = Nodes -Nodename $Node -ObjectGuid $ObjectGuid -OutputPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
 $newFile = Rename-Item -Path $mofFile.FullName -NewName $fileName -PassThru
 New-DSCCheckSum -ConfigurationPath $newFile.FullName -OutPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
