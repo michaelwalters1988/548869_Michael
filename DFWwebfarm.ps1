@@ -8,7 +8,6 @@ Configuration Nodes
 {
 
 
-
    Import-DSCResource -ModuleName rsScheduledTask
    Import-DSCResource -ModuleName rsGit
    Import-DSCResource -ModuleName msWebAdministration
@@ -20,7 +19,7 @@ Configuration Nodes
    Node $Node
    {       
 
-   <#
+
       WindowsFeature IIS
       {
          Ensure = "Present"
@@ -60,7 +59,7 @@ Configuration Nodes
          PhysicalPath    = "C:\inetpub\wwwroot"
          DependsOn       = "[WindowsFeature]IIS"
       }
-
+   <#
       xWebAppPool WebBlogAppPool 
       { 
          Name   = "WebBlog" 
