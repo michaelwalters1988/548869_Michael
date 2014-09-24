@@ -110,7 +110,7 @@ Ensure = "Present"
 rsCloudServersOpenStack DFWwebfarm
 {
 Ensure = "Present"
-minNumberOfDevices = 1
+minNumberOfDevices = 2
 maxNumberOfDevices = 9
 namingConvention = "Farm"
 image = "Windows Server 2012"
