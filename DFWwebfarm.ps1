@@ -136,6 +136,7 @@ Configuration Nodes
 
     }
 }
+$Node=$env:computername
 
    $ConfigData = @{
     AllNodes = @(
