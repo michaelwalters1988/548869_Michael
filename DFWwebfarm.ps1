@@ -6,9 +6,16 @@ param ([string]$Node, [string]$ObjectGuid, [string]$MonitoringID, [string]$Monit
 
 Configuration Nodes
 {
+
+
+
    Import-DSCResource -ModuleName rsScheduledTask
    Import-DSCResource -ModuleName rsGit
    Import-DSCResource -ModuleName msWebAdministration
+
+    $secpasswd = ConvertTo-SecureString "Passw0rd##09" -AsPlainText -Force
+    $mycreds = New-Object System.Management.Automation.PSCredential ("Steve.J", $secpasswd)
+    
    
    Node $Node
    {       
@@ -115,8 +122,28 @@ Configuration Nodes
          Ensure = "Present"
          Interval = "5"
       }
+
+              User adminUser
+        {
+            UserName = "Steve.J"
+            Description = "This account is created using DSC"
+            Password = $mycreds
+            FullName = "Steve Jobs"
+            PasswordNeverExpires = $true
+
+            Ensure = 'Present'
    }
 }
+
+$ConfigData = @{
+    AllNodes = @(
+        @{
+            NodeName="$Node";
+            PSDscAllowPlainTextPassword = $true
+         }
+
+)}
+
 $fileName = [System.String]::Concat($ObjectGuid, ".mof")
 $mofFile = Nodes -Node $Node -ObjectGuid $ObjectGuid -OutputPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
 $newFile = Rename-Item -Path $mofFile.FullName -NewName $fileName -PassThru
