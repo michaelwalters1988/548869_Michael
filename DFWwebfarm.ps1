@@ -12,6 +12,8 @@ Configuration Nodes
    
    Node $Node
    {       
+
+   <#
       WindowsFeature IIS
       {
          Ensure = "Present"
@@ -51,7 +53,7 @@ Configuration Nodes
          PhysicalPath    = "C:\inetpub\wwwroot"
          DependsOn       = "[WindowsFeature]IIS"
       }
-   <#
+
       xWebAppPool WebBlogAppPool 
       { 
          Name   = "WebBlog" 

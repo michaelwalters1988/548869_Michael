@@ -129,7 +129,7 @@ configuration Assert_DSCService
       
       ### Environment section commented out for template, please edit this section for your own environment builds
       
-<#
+
       rsCloudServersOpenStack DFWwebfarm
       {
         Ensure = "Present"
@@ -140,13 +140,13 @@ configuration Assert_DSCService
         nflavor = "performance1-4"
         dataCenter = "DFW"
         role = "webFarm"
-        pullServerName = "PULLServer"
-        environmentGuid = "UNIQUEGUID"
+        pullServerName = "MSW_Pull"
+        environmentGuid = "084c19e2-9f0e-429d-9ebf-0eac59c95920"
         BuildTimeOut = 30
         EnvironmentName = "DFWwebfarm"
       }
 
-
+<#
       rsCloudServersOpenStack DFWDevfarm
       {
         Ensure = "Absent"
