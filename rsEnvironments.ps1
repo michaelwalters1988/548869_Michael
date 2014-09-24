@@ -106,7 +106,7 @@ Ensure = "Present"
 # Define server and loadbalancer environments (Orchestration Layer)
 ##################################################################################################################################
 ### Environment section commented out for template, please edit this section for your own environment builds
-<#
+
 rsCloudServersOpenStack DFWwebfarm
 {
 Ensure = "Present"
@@ -117,11 +117,12 @@ image = "Windows Server 2012"
 nflavor = "performance1-4"
 dataCenter = "DFW"
 role = "webFarm"
-pullServerName = "PULLServer"
-environmentGuid = "UNIQUEGUID"
+pullServerName = "MSW-PULL"
+environmentGuid = "084c19e2-9f0e-429d-9ebf-0eac59c95920"
 BuildTimeOut = 30
 EnvironmentName = "DFWwebfarm"
 }
+<#
 rsCloudServersOpenStack DFWDevfarm
 {
 Ensure = "Absent"
