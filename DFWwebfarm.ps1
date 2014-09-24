@@ -145,6 +145,6 @@ $ConfigData = @{
 )}
 
 $fileName = [System.String]::Concat($ObjectGuid, ".mof")
-$mofFile = Nodes -Node $Node -ObjectGuid $ObjectGuid -OutputPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
+$mofFile = Nodes -Configurationdata $ConfigData -Node $Node -ObjectGuid $ObjectGuid -OutputPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
 $newFile = Rename-Item -Path $mofFile.FullName -NewName $fileName -PassThru
 New-DSCCheckSum -ConfigurationPath $newFile.FullName -OutPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
