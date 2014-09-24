@@ -9,26 +9,9 @@ Configuration Nodes
    Import-DSCResource -ModuleName rsScheduledTask
    Import-DSCResource -ModuleName rsGit
    Import-DSCResource -ModuleName msWebAdministration
-  
-  
-  
-    $secpasswd = ConvertTo-SecureString "Passw0rd##09" -AsPlainText -Force
-    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
- 
-   Node $Node
-   {  
    
-             User adminUser
-        {
-            UserName = "prodwebadmin"
-            Description = "This account is created using DSC"
-            Password = $mycreds
-            FullName = "prodwebadmin"
-            PasswordNeverExpires = $true
-            Ensure = 'Present'
-        }
-        
-           
+   Node $Node
+   {       
       WindowsFeature IIS
       {
          Ensure = "Present"
@@ -133,15 +116,7 @@ Configuration Nodes
       
    }
 }
-$ConfigData = @{
-    AllNodes = @(
-        @{
-            NodeName="$NodeName";
-            PSDscAllowPlainTextPassword = $true
-         }
-
-)}
 $fileName = [System.String]::Concat($ObjectGuid, ".mof")
-$mofFile = Nodes ConfigurationData $ConfigData -Node $Node -ObjectGuid $ObjectGuid -OutputPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
+$mofFile = Nodes -Node $Node -ObjectGuid $ObjectGuid -OutputPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'
 $newFile = Rename-Item -Path $mofFile.FullName -NewName $fileName -PassThru
 New-DSCCheckSum -ConfigurationPath $newFile.FullName -OutPath 'C:\Program Files\WindowsPowerShell\DscService\Configuration\'

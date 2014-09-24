@@ -39,26 +39,10 @@ configuration Assert_DSCService
    Import-DSCResource -ModuleName msWebAdministration
    Import-DSCResource -ModuleName PowerShellAccessControl
    Import-DSCResource -ModuleName msNetworking
-
-    $secpasswd = ConvertTo-SecureString "Passw0rd##09" -AsPlainText -Force
-    $mycreds = New-Object System.Management.Automation.PSCredential ("prodwebadmin", $secpasswd)
-
+   
    Node $NodeName
    {
     
-
-    
-
-        User adminUser
-        {
-            UserName = "prodwebadmin"
-            Description = "This account is created using DSC"
-            Password = $mycreds
-            FullName = "prodwebadmin"
-            PasswordNeverExpires = $true
-            Ensure = 'Present'
-        }
-
       ##################################################################################################################################
       # Install Required Windows Features (pull server)
       ##################################################################################################################################
@@ -145,7 +129,7 @@ configuration Assert_DSCService
       
       ### Environment section commented out for template, please edit this section for your own environment builds
       
-
+<#
       rsCloudServersOpenStack DFWwebfarm
       {
         Ensure = "Present"
@@ -156,13 +140,13 @@ configuration Assert_DSCService
         nflavor = "performance1-4"
         dataCenter = "DFW"
         role = "webFarm"
-        pullServerName = "MSW_Pull"
-        environmentGuid = "084c19e2-9f0e-429d-9ebf-0eac59c95920"
+        pullServerName = "PULLServer"
+        environmentGuid = "UNIQUEGUID"
         BuildTimeOut = 30
         EnvironmentName = "DFWwebfarm"
       }
 
-<#
+
       rsCloudServersOpenStack DFWDevfarm
       {
         Ensure = "Absent"
@@ -379,23 +363,6 @@ if(!(Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}) -or !(Ge
    powershell.exe certutil -addstore -f my $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
    powershell.exe certutil -addstore -f root $($d.wD, $d.mR, "Certificates\PullServer.cert.pfx" -join '\')
 }
-
-$ConfigData = @{
-    AllNodes = @(
-        @{
-            NodeName="$NodeName";
-            PSDscAllowPlainTextPassword = $true
-         }
-
-)}
 chdir C:\Windows\Temp
-Assert_DSCService ConfigurationData $ConfigData -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
+Assert_DSCService -NodeName $NodeName -certificateThumbPrint (Get-ChildItem Cert:\LocalMachine\My\ | where {$_.Subject -eq $cN}).Thumbprint
 Start-DscConfiguration -Path Assert_DSCService -Wait -Verbose -Force
-
-
-
-
-
-
-
-
